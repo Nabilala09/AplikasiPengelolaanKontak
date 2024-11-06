@@ -10,11 +10,14 @@ public class DatabaseHelper {
     public static Connection connect() {
         Connection conn = null;
         try {
-            conn = DriverManager.getConnection(URL);
+            String url = "jdbc:sqlite:kontak.db";  // Pastikan URL sesuai
+            conn = DriverManager.getConnection(url);
+            System.out.println("Koneksi ke database berhasil!");  // Logging untuk koneksi
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
+            System.out.println("Koneksi ke database gagal.");
+            e.printStackTrace();
         }
-        return conn;
+            return conn;
     }
     
     public static void createTable() {

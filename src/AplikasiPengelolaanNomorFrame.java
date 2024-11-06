@@ -1,3 +1,6 @@
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.sql.*;
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -9,13 +12,61 @@
  * @author Ahurrez
  */
 public class AplikasiPengelolaanNomorFrame extends javax.swing.JFrame {
-
+    private DefaultTableModel model;
     /**
      * Creates new form AplikasiPengelolaanNomorFrame
      */
     public AplikasiPengelolaanNomorFrame() {
         initComponents();
+        model = (DefaultTableModel) TbKategori.getModel();
+        model.setColumnIdentifiers(new String[]{"ID", "Nama", "Nomor Telepon", "Kategori"});
+        loadData();
     }
+    
+    private void tambahKontak() {
+        System.out.println("Tombol Tambah ditekan.");
+        String nama = TNama.getText();
+        String nomor = TNoTelepon.getText();
+        String kategori = CbKategori.getSelectedItem().toString();
+
+        String sql = "INSERT INTO kontak(nama, nomor_telepon, kategori) VALUES(?,?,?)";
+
+            try (Connection conn = DatabaseHelper.connect();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setString(1, nama);
+                pstmt.setString(2, nomor);
+                pstmt.setString(3, kategori);
+                pstmt.executeUpdate();
+                JOptionPane.showMessageDialog(this, "Kontak berhasil ditambahkan");
+                System.out.println("Data berhasil ditambahkan ke database.");
+                loadData();
+            } catch (SQLException e) {
+                e.printStackTrace();
+        }
+    }
+    
+    private void loadData(){
+        DefaultTableModel model = (DefaultTableModel) TbKategori.getModel();
+        model.setRowCount(0);
+        
+        String sql = "SELECT * FROM kontak";
+        
+        try (Connection conn = DatabaseHelper.connect();
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                model.addRow(new Object[]{
+                    rs.getInt("id"),
+                    rs.getString("nama"),
+                    rs.getString("nomor_telepon"),
+                    rs.getString("kategori")
+                });
+            }
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+    }
+    
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -26,21 +77,297 @@ public class AplikasiPengelolaanNomorFrame extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        jPanel1 = new javax.swing.JPanel();
+        jSeparator1 = new javax.swing.JSeparator();
+        jLabel1 = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
+        jLabel3 = new javax.swing.JLabel();
+        jLabel4 = new javax.swing.JLabel();
+        TNama = new javax.swing.JTextField();
+        TNoTelepon = new javax.swing.JTextField();
+        CbKategori = new javax.swing.JComboBox<>();
+        jPanel2 = new javax.swing.JPanel();
+        BTambah = new javax.swing.JButton();
+        BEdit = new javax.swing.JButton();
+        BHapus = new javax.swing.JButton();
+        BCari = new javax.swing.JButton();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        TbKategori = new javax.swing.JTable();
+
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+
+        jPanel1.setBackground(new java.awt.Color(102, 255, 102));
+
+        jLabel1.setFont(new java.awt.Font("Times New Roman", 1, 20)); // NOI18N
+        jLabel1.setText("Aplikasi Pengelolaan Nomor");
+
+        jLabel2.setFont(new java.awt.Font("Times New Roman", 1, 14)); // NOI18N
+        jLabel2.setText("Nama");
+
+        jLabel3.setFont(new java.awt.Font("Times New Roman", 1, 14)); // NOI18N
+        jLabel3.setText("No Telepon");
+
+        jLabel4.setFont(new java.awt.Font("Times New Roman", 1, 14)); // NOI18N
+        jLabel4.setText("Kategori");
+
+        TNama.setFont(new java.awt.Font("Times New Roman", 1, 14)); // NOI18N
+
+        TNoTelepon.setFont(new java.awt.Font("Times New Roman", 1, 14)); // NOI18N
+
+        CbKategori.setFont(new java.awt.Font("Times New Roman", 1, 14)); // NOI18N
+        CbKategori.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Keluarga", "Teman", "Rekan Kerja", "Sahabat", "Orang Asing" }));
+
+        jPanel2.setBackground(new java.awt.Color(102, 255, 102));
+
+        BTambah.setFont(new java.awt.Font("Times New Roman", 1, 12)); // NOI18N
+        BTambah.setText("Tambah");
+        BTambah.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                BTambahActionPerformed(evt);
+            }
+        });
+
+        BEdit.setFont(new java.awt.Font("Times New Roman", 1, 12)); // NOI18N
+        BEdit.setText("Edit");
+        BEdit.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                BEditActionPerformed(evt);
+            }
+        });
+
+        BHapus.setFont(new java.awt.Font("Times New Roman", 1, 12)); // NOI18N
+        BHapus.setText("Hapus");
+        BHapus.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                BHapusActionPerformed(evt);
+            }
+        });
+
+        BCari.setFont(new java.awt.Font("Times New Roman", 1, 12)); // NOI18N
+        BCari.setText("Cari");
+        BCari.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                BCariActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
+        jPanel2.setLayout(jPanel2Layout);
+        jPanel2Layout.setHorizontalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(BTambah)
+                .addGap(18, 18, 18)
+                .addComponent(BEdit, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addComponent(BHapus, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addComponent(BCari, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+        jPanel2Layout.setVerticalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(BTambah)
+                    .addComponent(BEdit)
+                    .addComponent(BHapus)
+                    .addComponent(BCari))
+                .addContainerGap())
+        );
+
+        TbKategori.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null}
+            },
+            new String [] {
+                "Id", "Nama", "No Telepon", "Kategori"
+            }
+        ));
+        jScrollPane1.setViewportView(TbKategori);
+
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jSeparator1)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addGap(132, 132, 132)
+                                .addComponent(jLabel1))
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addContainerGap()
+                                .addComponent(jLabel4)))
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(jLabel2)
+                                .addGap(70, 70, 70)
+                                .addComponent(TNama))
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(jLabel3)
+                                .addGap(37, 37, 37)
+                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(CbKategori, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addComponent(TNoTelepon)))
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                                .addGap(0, 0, Short.MAX_VALUE)
+                                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(33, 33, 33))
+                            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 476, Short.MAX_VALUE))))
+                .addContainerGap())
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jLabel1)
+                .addGap(10, 10, 10)
+                .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel2)
+                    .addComponent(TNama, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel3)
+                    .addComponent(TNoTelepon, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel4)
+                    .addComponent(CbKategori, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 113, Short.MAX_VALUE)
+                .addContainerGap())
+        );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 400, Short.MAX_VALUE)
+            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 300, Short.MAX_VALUE)
+            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void BTambahActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BTambahActionPerformed
+        // TODO add your handling code here:
+        tambahKontak();
+        String nama = TNama.getText();
+        String nomor = TNoTelepon.getText();
+        String kategori = CbKategori.getSelectedItem().toString();
+        
+        String sql = "INSERT INTO kontak(nama, nomor_telepon, kategori) VALUES(?,?,?)";
+        
+            try (Connection conn = DatabaseHelper.connect();
+                PreparedStatement pstmt = conn.prepareStatement(sql)){
+                pstmt.setString(1, nama);
+                pstmt.setString(2, nomor);
+                pstmt.setString(3, kategori);
+                pstmt.executeUpdate();
+                JOptionPane.showMessageDialog(this, "Kontak berhasil ditambahkan");
+                loadData();
+            } catch (SQLException e) {
+                e.printStackTrace();
+        }
+    }//GEN-LAST:event_BTambahActionPerformed
+
+    private void BEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BEditActionPerformed
+        // TODO add your handling code here:
+        int selectedRow = TbKategori.getSelectedRow();
+        if (selectedRow == -1) {
+        JOptionPane.showMessageDialog(this, "Pilih kontak yang ingin diedit");
+        return;
+    }
+        int id = (int) model.getValueAt(selectedRow, 0);
+        String nama = TNama.getText();
+        String nomor = TNoTelepon.getText();
+        String kategori = CbKategori.getSelectedItem().toString();
+        
+        String sql = "UPDATE kontak SET nama = ?, nomor_telepon = ?, kategori = ? WHERE id = ?";
+        
+            try (Connection conn = DatabaseHelper.connect();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setString(1, nama);
+                pstmt.setString(2, nomor);
+                pstmt.setString(3, kategori);
+                pstmt.setInt(4, id);
+                pstmt.executeUpdate();
+                JOptionPane.showMessageDialog(this, "Kontak berhasil diperbarui");
+                loadData();
+            } catch (SQLException e) {
+                e.printStackTrace();
+        }
+    }//GEN-LAST:event_BEditActionPerformed
+
+    private void BHapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BHapusActionPerformed
+        // TODO add your handling code here:
+        int selectedRow = TbKategori.getSelectedRow();
+    if (selectedRow == -1) {
+        JOptionPane.showMessageDialog(this, "Pilih kontak yang ingin dihapus");
+        return;
+    }
+    int id = (int) model.getValueAt(selectedRow, 0);
+
+    String sql = "DELETE FROM kontak WHERE id = ?";
+    
+        try (Connection conn = DatabaseHelper.connect();
+            PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            pstmt.executeUpdate();
+            JOptionPane.showMessageDialog(this, "Kontak berhasil dihapus");
+            loadData();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }//GEN-LAST:event_BHapusActionPerformed
+
+    private void BCariActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BCariActionPerformed
+        // TODO add your handling code here:
+        String keyword = TNama.getText();
+        model.setRowCount(0);
+        String sql = "SELECT * FROM kontak WHERE nama LIKE ? OR nomor_telepon LIKE ?";
+        
+        try (Connection conn = DatabaseHelper.connect();
+        PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        pstmt.setString(1, "%" + keyword + "%");
+        pstmt.setString(2, "%" + keyword + "%");
+        ResultSet rs = pstmt.executeQuery();
+        while (rs.next()) {
+            model.addRow(new Object[]{
+                rs.getInt("id"),
+                rs.getString("nama"),
+                rs.getString("nomor_telepon"),
+                rs.getString("kategori")
+            });
+        }
+        } catch (SQLException e) {
+        e.printStackTrace();
+    }
+    }//GEN-LAST:event_BCariActionPerformed
 
     /**
      * @param args the command line arguments
@@ -78,5 +405,21 @@ public class AplikasiPengelolaanNomorFrame extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton BCari;
+    private javax.swing.JButton BEdit;
+    private javax.swing.JButton BHapus;
+    private javax.swing.JButton BTambah;
+    private javax.swing.JComboBox<String> CbKategori;
+    private javax.swing.JTextField TNama;
+    private javax.swing.JTextField TNoTelepon;
+    private javax.swing.JTable TbKategori;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel2;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JSeparator jSeparator1;
     // End of variables declaration//GEN-END:variables
 }
