@@ -1,6 +1,16 @@
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.sql.*;
+import java.io.FileWriter;
+import java.io.File;
+import java.io.IOException;
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -23,11 +33,21 @@ public class AplikasiPengelolaanNomorFrame extends javax.swing.JFrame {
         loadData();
     }
     
+    private boolean validasiNomorTelepon(String nomor){
+        return nomor.matches("\\d{10,13}");
+    }
+    
     private void tambahKontak() {
         System.out.println("Tombol Tambah ditekan.");
         String nama = TNama.getText();
         String nomor = TNoTelepon.getText();
         String kategori = CbKategori.getSelectedItem().toString();
+        String nomorTelepon = TNoTelepon.getText();
+        
+        if (!validasiNomorTelepon(nomor)) {
+                JOptionPane.showMessageDialog(this, "Nomor telepon harus terdiri dari 10-13 digit angka.");
+            return;
+        }
 
         String sql = "INSERT INTO kontak(nama, nomor_telepon, kategori) VALUES(?,?,?)";
 
@@ -39,12 +59,84 @@ public class AplikasiPengelolaanNomorFrame extends javax.swing.JFrame {
                 pstmt.executeUpdate();
                 JOptionPane.showMessageDialog(this, "Kontak berhasil ditambahkan");
                 System.out.println("Data berhasil ditambahkan ke database.");
+                
                 loadData();
             } catch (SQLException e) {
                 e.printStackTrace();
+        }    
+    }
+    
+    private void eksporKeCSV() {
+    JFileChooser fileChooser = new JFileChooser();
+    FcFile.setDialogTitle("Simpan sebagai CSV");
+    int userSelection = FcFile.showSaveDialog(this);
+
+    if (userSelection == JFileChooser.APPROVE_OPTION) {
+        File fileToSave = FcFile.getSelectedFile();
+        
+            try (FileWriter fw = new FileWriter(fileToSave + ".csv")) {
+            // Menulis header kolom ke file CSV
+                for (int i = 0; i < model.getColumnCount(); i++) {
+                    fw.write(model.getColumnName(i) + ",");
+                }
+                fw.write("\n");
+
+            // Menulis baris data dari JTable ke file CSV
+                for (int i = 0; i < model.getRowCount(); i++) {
+                    for (int j = 0; j < model.getColumnCount(); j++) {
+                        fw.write(model.getValueAt(i, j).toString() + ",");
+                    }
+                    fw.write("\n");
+                }
+                JOptionPane.showMessageDialog(this, "Data berhasil diekspor ke CSV!");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    JOptionPane.showMessageDialog(this, "Terjadi kesalahan saat mengekspor data.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
     
+    private void imporDariCSV() {
+    JFileChooser fileChooser = new JFileChooser();
+    FcFile.setDialogTitle("Pilih file CSV");
+    int userSelection = FcFile.showOpenDialog(this);
+
+    if (userSelection == JFileChooser.APPROVE_OPTION) {
+        File fileToOpen = FcFile.getSelectedFile();
+        
+        try (BufferedReader br = new BufferedReader(new FileReader(fileToOpen))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                // Memisahkan setiap kolom dengan koma
+                String[] data = line.split(",");
+
+                // Pastikan jumlah kolom sesuai dengan tabel (misalnya ada 4 kolom: ID, Nama, Nomor Telepon, Kategori)
+                if (data.length == 4) {
+                    // Masukkan data ke dalam database
+                    String sql = "INSERT INTO kontak(id, nama, nomor_telepon, kategori) VALUES(?, ?, ?, ?)";
+                    try (Connection conn = DatabaseHelper.connect();
+                         PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                        pstmt.setInt(1, Integer.parseInt(data[0]));
+                        pstmt.setString(2, data[1]);
+                        pstmt.setString(3, data[2]);
+                        pstmt.setString(4, data[3]);
+                        pstmt.executeUpdate();
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+
+                    // Tambahkan data ke JTable
+                    model.addRow(new Object[]{data[0], data[1], data[2], data[3]});
+                }
+            }
+            JOptionPane.showMessageDialog(this, "Data berhasil diimpor dari CSV!");
+        } catch (IOException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Terjadi kesalahan saat membaca file CSV.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+}
+ 
     private void loadData(){
         DefaultTableModel model = (DefaultTableModel) TbKategori.getModel();
         model.setRowCount(0);
@@ -93,6 +185,9 @@ public class AplikasiPengelolaanNomorFrame extends javax.swing.JFrame {
         BCari = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         TbKategori = new javax.swing.JTable();
+        BEksporData = new javax.swing.JButton();
+        FcFile = new javax.swing.JFileChooser();
+        BImporData = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -113,6 +208,11 @@ public class AplikasiPengelolaanNomorFrame extends javax.swing.JFrame {
         TNama.setFont(new java.awt.Font("Times New Roman", 1, 14)); // NOI18N
 
         TNoTelepon.setFont(new java.awt.Font("Times New Roman", 1, 14)); // NOI18N
+        TNoTelepon.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyTyped(java.awt.event.KeyEvent evt) {
+                TNoTeleponKeyTyped(evt);
+            }
+        });
 
         CbKategori.setFont(new java.awt.Font("Times New Roman", 1, 14)); // NOI18N
         CbKategori.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Keluarga", "Teman", "Rekan Kerja", "Sahabat", "Orang Asing" }));
@@ -197,6 +297,22 @@ public class AplikasiPengelolaanNomorFrame extends javax.swing.JFrame {
         ));
         jScrollPane1.setViewportView(TbKategori);
 
+        BEksporData.setFont(new java.awt.Font("Times New Roman", 1, 12)); // NOI18N
+        BEksporData.setText("Ekspor Data");
+        BEksporData.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                BEksporDataActionPerformed(evt);
+            }
+        });
+
+        BImporData.setFont(new java.awt.Font("Times New Roman", 1, 12)); // NOI18N
+        BImporData.setText("Impor Data");
+        BImporData.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                BImporDataActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -230,8 +346,15 @@ public class AplikasiPengelolaanNomorFrame extends javax.swing.JFrame {
                                 .addGap(0, 0, Short.MAX_VALUE)
                                 .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addGap(33, 33, 33))
-                            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 476, Short.MAX_VALUE))))
+                            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 494, Short.MAX_VALUE)))
+                    .addComponent(FcFile, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
                 .addContainerGap())
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                .addGap(0, 0, Short.MAX_VALUE)
+                .addComponent(BEksporData)
+                .addGap(18, 18, 18)
+                .addComponent(BImporData)
+                .addGap(46, 46, 46))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -255,19 +378,24 @@ public class AplikasiPengelolaanNomorFrame extends javax.swing.JFrame {
                 .addGap(18, 18, 18)
                 .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 113, Short.MAX_VALUE)
-                .addContainerGap())
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 170, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(BEksporData, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(BImporData, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(24, 24, 24)
+                .addComponent(FcFile, javax.swing.GroupLayout.PREFERRED_SIZE, 0, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
 
         pack();
@@ -275,7 +403,6 @@ public class AplikasiPengelolaanNomorFrame extends javax.swing.JFrame {
 
     private void BTambahActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BTambahActionPerformed
         // TODO add your handling code here:
-        tambahKontak();
         String nama = TNama.getText();
         String nomor = TNoTelepon.getText();
         String kategori = CbKategori.getSelectedItem().toString();
@@ -297,6 +424,7 @@ public class AplikasiPengelolaanNomorFrame extends javax.swing.JFrame {
 
     private void BEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BEditActionPerformed
         // TODO add your handling code here:
+        eksporKeCSV();
         int selectedRow = TbKategori.getSelectedRow();
         if (selectedRow == -1) {
         JOptionPane.showMessageDialog(this, "Pilih kontak yang ingin diedit");
@@ -369,6 +497,25 @@ public class AplikasiPengelolaanNomorFrame extends javax.swing.JFrame {
     }
     }//GEN-LAST:event_BCariActionPerformed
 
+    private void TNoTeleponKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_TNoTeleponKeyTyped
+        char karakter = evt.getKeyChar();
+            if (!Character.isDigit(karakter)) {
+                evt.consume();
+        }
+
+            if (TNoTelepon.getText().length() >= 13) {
+            evt.consume(); 
+        }
+    }//GEN-LAST:event_TNoTeleponKeyTyped
+
+    private void BEksporDataActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BEksporDataActionPerformed
+        eksporKeCSV();
+    }//GEN-LAST:event_BEksporDataActionPerformed
+
+    private void BImporDataActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BImporDataActionPerformed
+        imporDariCSV();
+    }//GEN-LAST:event_BImporDataActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -407,9 +554,12 @@ public class AplikasiPengelolaanNomorFrame extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton BCari;
     private javax.swing.JButton BEdit;
+    private javax.swing.JButton BEksporData;
     private javax.swing.JButton BHapus;
+    private javax.swing.JButton BImporData;
     private javax.swing.JButton BTambah;
     private javax.swing.JComboBox<String> CbKategori;
+    private javax.swing.JFileChooser FcFile;
     private javax.swing.JTextField TNama;
     private javax.swing.JTextField TNoTelepon;
     private javax.swing.JTable TbKategori;
